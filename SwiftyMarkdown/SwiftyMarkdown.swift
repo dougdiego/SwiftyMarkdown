@@ -10,9 +10,8 @@ import UIKit
 
 
 @objc public protocol FontProperties {
-	var fontName : String? { get set }
-	var color : UIColor { get set }
-	var fontSize : CGFloat { get set }
+    var font : UIFont { get set }
+    var color : UIColor { get set }
 }
 
 
@@ -22,9 +21,8 @@ A struct defining the styles that can be applied to the parsed Markdown. The `fo
 If that is not set, then the system default will be used.
 */
 @objc open class BasicStyles : NSObject, FontProperties {
-	public var fontName : String? = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.body).fontName
-	public var color = UIColor.black
-	public var fontSize : CGFloat = 0.0
+    public var font : UIFont = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.body)
+    public var color = UIColor.black
 }
 
 enum LineType : Int {
@@ -130,18 +128,18 @@ enum LineStyle : Int {
 	
 	- parameter size: size of font
 	*/
-	open func setFontSizeForAllStyles(with size: CGFloat) {
-		h1.fontSize = size
-		h2.fontSize = size
-		h3.fontSize = size
-		h4.fontSize = size
-		h5.fontSize = size
-		h6.fontSize = size
-		body.fontSize = size
-		italic.fontSize = size
-		code.fontSize = size
-		link.fontSize = size
-	}
+    open func setFontSizeForAllStyles(with size: CGFloat) {
+        h1.font = h1.font.withSize(size)
+        h2.font = h1.font.withSize(size)
+        h3.font = h1.font.withSize(size)
+        h4.font = h1.font.withSize(size)
+        h5.font = h1.font.withSize(size)
+        h6.font = h1.font.withSize(size)
+        body.font = body.font.withSize(size)
+        italic.font = italic.font.withSize(size)
+        code.font = code.font.withSize(size)
+        link.font = link.font.withSize(size)
+    }
 	
 	open func setFontColorForAllStyles(with color: UIColor) {
 		h1.color = color
@@ -156,18 +154,18 @@ enum LineStyle : Int {
 		link.color = color
 	}
 	
-	open func setFontNameForAllStyles(with name: String) {
-		h1.fontName = name
-		h2.fontName = name
-		h3.fontName = name
-		h4.fontName = name
-		h5.fontName = name
-		h6.fontName = name
-		body.fontName = name
-		italic.fontName = name
-		code.fontName = name
-		link.fontName = name
-	}
+    open func setFontForAllStyles(with font: UIFont) {
+        h1.font = font
+        h2.font = font
+        h3.font = font
+        h4.font = font
+        h5.font = font
+        h6.font = font
+        body.font = font
+        italic.font = font
+        code.font = font
+        link.font = font
+    }
 	
 	/**
 	Generates an NSAttributedString from the string or URL passed at initialisation. Custom fonts or styles are applied to the appropriate elements when this method is called.
@@ -367,116 +365,93 @@ enum LineStyle : Int {
 	
 	// Make H1
 	
-	func attributedStringFromString(_ string : String, withStyle style : LineStyle, attributes : [NSAttributedString.Key : AnyObject] = [:] ) -> NSAttributedString {
-		let textStyle : UIFont.TextStyle
-		var fontName : String?
-		var attributes = attributes
-		var fontSize : CGFloat?
-		
-		// What type are we and is there a font name set?
-		
-		
-		switch currentType {
-		case .h1:
-			fontName = h1.fontName
-			fontSize = h1.fontSize
-			if #available(iOS 9, *) {
-				textStyle = UIFont.TextStyle.title1
-			} else {
-				textStyle = UIFont.TextStyle.headline
-			}
-			attributes[NSAttributedString.Key.foregroundColor] = h1.color
-		case .h2:
-			fontName = h2.fontName
-			fontSize = h2.fontSize
-			if #available(iOS 9, *) {
-				textStyle = UIFont.TextStyle.title2
-			} else {
-				textStyle = UIFont.TextStyle.headline
-			}
-			attributes[NSAttributedString.Key.foregroundColor] = h2.color
-		case .h3:
-			fontName = h3.fontName
-			fontSize = h3.fontSize
-			if #available(iOS 9, *) {
-				textStyle = UIFont.TextStyle.title2
-			} else {
-				textStyle = UIFont.TextStyle.subheadline
-			}
-			attributes[NSAttributedString.Key.foregroundColor] = h3.color
-		case .h4:
-			fontName = h4.fontName
-			fontSize = h4.fontSize
-			textStyle = UIFont.TextStyle.headline
-			attributes[NSAttributedString.Key.foregroundColor] = h4.color
-		case .h5:
-			fontName = h5.fontName
-			fontSize = h5.fontSize
-			textStyle = UIFont.TextStyle.subheadline
-			attributes[NSAttributedString.Key.foregroundColor] = h5.color
-		case .h6:
-			fontName = h6.fontName
-			fontSize = h6.fontSize
-			textStyle = UIFont.TextStyle.footnote
-			attributes[NSAttributedString.Key.foregroundColor] = h6.color
-		default:
-			fontName = body.fontName
-			fontSize = body.fontSize
-			textStyle = UIFont.TextStyle.body
-			attributes[NSAttributedString.Key.foregroundColor] = body.color
-			break
-		}
-		
-		// Check for code
-		
-		if style == .code {
-			fontName = code.fontName
-			fontSize = code.fontSize
-			attributes[NSAttributedString.Key.foregroundColor] = code.color
-		}
-		
-		if style == .link {
-			fontName = link.fontName
-			fontSize = link.fontSize
-			attributes[NSAttributedString.Key.foregroundColor] = link.color
-		}
-		
-		// Fallback to body
-		if let _ = fontName {
-			
-		} else {
-			fontName = body.fontName
-		}
-		
-		fontSize = fontSize == 0.0 ? nil : fontSize
-		let font = UIFont.preferredFont(forTextStyle: textStyle)
-		let styleDescriptor = font.fontDescriptor
-		let styleSize = fontSize ?? styleDescriptor.fontAttributes[UIFontDescriptor.AttributeName.size] as? CGFloat ?? CGFloat(14)
-		
-		var finalFont : UIFont
-		if let finalFontName = fontName, let font = UIFont(name: finalFontName, size: styleSize) {
-			finalFont = font
-		} else {
-			finalFont = UIFont.preferredFont(forTextStyle:  textStyle)
-		}
-		
-		let finalFontDescriptor = finalFont.fontDescriptor
-		if style == .italic {
-			if let italicDescriptor = finalFontDescriptor.withSymbolicTraits(.traitItalic) {
-				finalFont = UIFont(descriptor: italicDescriptor, size: styleSize)
-			}
-			
-		}
-		if style == .bold {
-			if let boldDescriptor = finalFontDescriptor.withSymbolicTraits(.traitBold) {
-				finalFont = UIFont(descriptor: boldDescriptor, size: styleSize)
-			}
-			
-		}
-		
-		
-		attributes[NSAttributedString.Key.font] = finalFont
-		
-		return NSAttributedString(string: string, attributes: attributes)
-	}
+    func attributedStringFromString(_ string : String, withStyle style : LineStyle, attributes : [NSAttributedString.Key : AnyObject] = [:] ) -> NSAttributedString {
+        let textStyle : UIFont.TextStyle
+        var font : UIFont?
+        var attributes = attributes
+
+        // What type are we and is there a font name set?
+
+
+        switch currentType {
+        case .h1:
+            font = h1.font
+            if #available(iOS 9, *) {
+                textStyle = UIFont.TextStyle.title1
+            } else {
+                textStyle = UIFont.TextStyle.headline
+            }
+            attributes[NSAttributedString.Key.foregroundColor] = h1.color
+        case .h2:
+            font = h2.font
+            if #available(iOS 9, *) {
+                textStyle = UIFont.TextStyle.title2
+            } else {
+                textStyle = UIFont.TextStyle.headline
+            }
+            attributes[NSAttributedString.Key.foregroundColor] = h2.color
+        case .h3:
+            font = h3.font
+            if #available(iOS 9, *) {
+                textStyle = UIFont.TextStyle.title2
+            } else {
+                textStyle = UIFont.TextStyle.subheadline
+            }
+            attributes[NSAttributedString.Key.foregroundColor] = h3.color
+        case .h4:
+            font = h4.font
+            textStyle = UIFont.TextStyle.headline
+            attributes[NSAttributedString.Key.foregroundColor] = h4.color
+        case .h5:
+            font = h5.font
+            textStyle = UIFont.TextStyle.subheadline
+            attributes[NSAttributedString.Key.foregroundColor] = h5.color
+        case .h6:
+            font = h6.font
+            textStyle = UIFont.TextStyle.footnote
+            attributes[NSAttributedString.Key.foregroundColor] = h6.color
+        default:
+            font = body.font
+            textStyle = UIFont.TextStyle.body
+            attributes[NSAttributedString.Key.foregroundColor] = body.color
+            break
+        }
+
+        // Check for code
+
+        if style == .code {
+            font = code.font
+            attributes[NSAttributedString.Key.foregroundColor] = code.color
+        }
+
+        if style == .link {
+            font = link.font
+            attributes[NSAttributedString.Key.foregroundColor] = link.color
+        }
+
+        // Fallback to body
+        var finalFont: UIFont = font ?? body.font
+
+        let styleDescriptor = finalFont.fontDescriptor
+        let styleSize = styleDescriptor.fontAttributes[UIFontDescriptor.AttributeName.size] as? CGFloat ?? CGFloat(14)
+
+        let finalFontDescriptor = finalFont.fontDescriptor
+        if style == .italic {
+            if let italicDescriptor = finalFontDescriptor.withSymbolicTraits(.traitItalic) {
+                finalFont = UIFont(descriptor: italicDescriptor, size: styleSize)
+            }
+
+        }
+        if style == .bold {
+            if let boldDescriptor = finalFontDescriptor.withSymbolicTraits(.traitBold) {
+                finalFont = UIFont(descriptor: boldDescriptor, size: styleSize)
+            }
+
+        }
+
+
+        attributes[NSAttributedString.Key.font] = finalFont
+
+        return NSAttributedString(string: string, attributes: attributes)
+    }
 }
